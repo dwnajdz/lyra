@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="container">
+
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="index.html">Overview</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Inventory</li>
+        </ol>
+      </nav>
+
+      <div class="row">
+        <div class="col-mt-12">
+          <div class="card mt-2 shadow-sm p-3 mb-5 bg-body rounded">
+            <div class="card-body">
+              <table class="table table-bordered">
+                <thead>
+                  <tr>
+                    <th scope="col">Symbol</th>
+                    <th scope="col">Current price</th>
+                    <th scope="col">Buy price</th>
+                    <th scope="col">Gain/Loss</th>
+                    <th scope="col">Gain/Loss %</th>
+                    <th scope="col">Owned</th>
+                    <th scope="col">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for item in inventory %}
+                  <tr>
+                    <th scope="row">{{ item.stock }}</th>
+                    <td>144.18</td>
+                    <td>{{ item.priceWhenBuyed }}</td>
+                    <td class="text-success">+0.88</td>
+                    <td class="text-success">+0.61%</td>
+                    <td>{{ item.ownedPrice }}</td>
+                    <td class="text-center"><a href="#" class="btn btn-outline-primary ">Info</a></td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+{% endblock %}

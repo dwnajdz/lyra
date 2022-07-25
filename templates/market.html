@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+  <!-- Button trigger modal -->
+  <button type="button" class="btn btn-primary allign-right" data-bs-toggle="modal" data-bs-target="#add">
+    ADD+
+  </button>
+
+  <!-- Modal -->
+  <div class="modal fade" id="add" tabindex="-1" aria-labelledby="add" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Add new stock for your market</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form method="POST" action="/market/add">
+            <label for="exampleInputEmail1" class="form-label">Symbol</label>
+            <input type="text" id="stock-symbol" name="stock-symbol" class="form-control" aria-describedby="symbol">
+            <div id="helpSymbol" class="form-text">For example you can use: BTC-USD, TSLA, GOOG</div>
+            <div class="modal-footer mt-3">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              <button type="submit" class="btn btn-primary">Submit</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="index.html">Overview</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Market</li>
+    </ol>
+  </nav>
+
+  <div class="row">
+    <div class="col-mt-12">
+      <div class="card mt-2 shadow-sm p-3 mb-5 bg-body rounded">
+        <div class="card-body">
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th scope="col">Symbol</th>
+                <th scope="col">Last price</th>
+                <th scope="col">Max. price</th>
+                <th scope="col">Min. price</th>
+                <th scope="col">Change (Chg.)</th>
+                <th scope="col">% Chg.</th>
+                <th scope="col">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for dict in dicts %}
+              <tr>
+                <th scope="row">{{dict['Symbol']}}</th>
+                <td>{{dict['LastPrice']}}</td>
+                <td>{{dict['High']}}</td>
+                <td>{{dict['Low']}}</td>
+                <td class="{{dict['Color']}}">{{dict['Change']}}</td>
+                <td class="{{dict['Color']}}">{{dict['Percent']}}%</td>
+                <td class="text-center"><a href="/market/{{ dict['ID'] }}" class="btn btn-outline-primary ">Info</a></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

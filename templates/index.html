@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item active" aria-current="page">Overview</li>
+    </ol>
+  </nav>
+
+  <div class="row">
+    <div class="col-sm-6">
+      <div class="card">
+        <h3 class="card-header">Balance of % changes</h3>
+        <div class="card-body mb-4">
+          <canvas class="my-4 w-100" id="myChart" width="900" height="380"></canvas>
+        </div>
+      </div>
+
+      <div class="card mt-3 mb-3">
+        <h2 class="card-header"><a href="#">Inventory</a></h2>
+        <div class="card-body">
+
+
+          <h5 class="card-title">Stocks that you own</h5>
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Bought</th>
+                <th scope="col">+/-</th>
+                <th scope="col">% Chg.</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">AAPL</th>
+                <td>144.18</td>
+                <td class="text-success">+0.88</td>
+                <td class="text-success">+0.61%</td>
+              </tr>
+              <tr>
+                <th scope="row">TSLA</th>
+                <td>844.18</td>
+                <td class="text-danger">-0.88</td>
+                <td class="text-danger">+0.61%</td>
+              </tr>
+              <tr>
+                <th scope="row">GOOGL</th>
+                <td>2345.98</td>
+                <td class="text-success">+68.14</td>
+                <td class="text-success">+2.99%</td>
+              </tr>
+              <tr>
+                <th colspan="5" class="text-center">
+                  <div class="d-grid gap-2 col-3 mx-auto">
+                    <a href="/inventory" class="btn btn-outline-primary btn-sm">...</a>
+                  </div>
+                </th>
+              </tr>
+            </tbody>
+          </table>
+
+          <p class="card-text">Stocks that are owned by you. You can check more of them in the Inventory page.</p>
+          <a href="/inventory" class="btn btn-primary">Inventory</a>
+        </div>
+      </div>
+
+    </div>
+    <div class="col-sm-6">
+      <div class="card">
+        <h2 class="card-header">Balance [$USD]</h2>
+        <div class="card-body">
+          <h1 class="text-center">{{ balance }}</h1>
+          <hr>
+
+          <div class="row">
+            <div class="col" style="border-right: 1px solid #333;">
+              <h6 class="text-center text-body">Loss this day: </h6>
+              <h4 class="text-center text-danger bg-dark">-32.54</h4>
+            </div>
+            <div class="col">
+              <h6 class="text-center text-body">Gain this day: </h6>
+              <h4 class="text-center text-success bg-dark">+32.54</h4>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <div class="card mt-5">
+        <h2 class="card-header"><a href="#">Market</a></h2>
+        <div class="card-body">
+          <h5 class="card-title">Most popular stocks</h5>
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Min. price</th>
+                <th scope="col">Max. price</th>
+                <th scope="col">+/-</th>
+                <th scope="col">% Chg.</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">AAPL</th>
+                <td>144.18</td>
+                <td>145.06</td>
+                <td class="text-success">+0.88</td>
+                <td class="text-success">+0.61%</td>
+              </tr>
+              <tr>
+                <th scope="row">TSLA</th>
+                <td>844.18</td>
+                <td>845.06</td>
+                <td class="text-danger">-0.88</td>
+                <td class="text-danger">+0.61%</td>
+              </tr>
+              <tr>
+                <th scope="row">GOOGL</th>
+                <td>2345.98</td>
+                <td>2258.93</td>
+                <td class="text-success">+68.14</td>
+                <td class="text-success">+2.99%</td>
+              </tr>
+              <tr>
+                <th scope="row">FB</th>
+                <td>144.18</td>
+                <td>145.06</td>
+                <td class="text-success">+0.88</td>
+                <td class="text-success">+0.61%</td>
+              </tr>
+              <tr>
+                <th colspan="5" class="text-center">
+                  <div class="d-grid gap-2 col-3 mx-auto">
+                    <a href="/market" class="btn btn-outline-primary btn-sm">...</a>
+                  </div>
+                </th>
+              </tr>
+            </tbody>
+          </table>
+
+          <p class="card-text">These are just most popular stocks in the market. You can browse more of them if you
+            click button below.</p>
+          <a href="/market" class="btn btn-primary">Market</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/feather-icons@4.28.0/dist/feather.min.js"
+  integrity="sha384-uO3SXW5IuS1ZpFPKugNNWqTZRRglnUJK6UAZ/gxOX80nxEkN9NcGZTftn6RzhGWE" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"
+  integrity="sha384-zNy6FEbO50N+Cg5wap8IKA4M/ZnLJgzc6w2NqACZaK0u0FXfOWRRJOnQtpZun8ha" crossorigin="anonymous"></script>
+
+<script>
+  /* globals Chart:false, feather:false */
+
+  (function () {
+    'use strict'
+
+    feather.replace({ 'aria-hidden': 'true' })
+
+    // Graphs
+    var ctx = document.getElementById('myChart')
+    // eslint-disable-next-line no-unused-vars
+    var myChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [
+          'Sunday',
+          'Monday',
+          'Tuesday',
+          'Wednesday',
+          'Thursday',
+          'Friday',
+          'Saturday'
+        ],
+        datasets: [{
+          data: [
+            15339,
+            21345,
+            18483,
+            24003,
+            23489,
+            24092,
+            12034
+          ],
+          lineTension: 0,
+          backgroundColor: 'transparent',
+          borderColor: '#007bff',
+          borderWidth: 4,
+          pointBackgroundColor: '#007bff'
+        }]
+      },
+      options: {
+        scales: {
+          yAxes: [{
+            ticks: {
+              beginAtZero: false
+            }
+          }]
+        },
+        legend: {
+          display: false
+        }
+      }
+    })
+  })()
+</script>
+{% endblock %}
