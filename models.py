@@ -22,7 +22,7 @@ class User(UserMixin, db.Model):
 class Inventory(db.Model):
     __tablename__ = "inventory"
     id = db.Column(db.Integer, primary_key=True)
-    stock = db.Column(db.String(1000), nullable=False)
+    symbol = db.Column(db.String(1000), nullable=False)
     # ownedPrice is how much you spended on that stock
     ownedPrice = db.Column(db.Float, nullable=False)
     # priceWhenBuyed is price of this as you were buying it
@@ -32,7 +32,10 @@ class Inventory(db.Model):
     currentPrice = db.Column(db.Float)
     gainOrLoss = db.Column(db.Float)
     gainOrLossPercent = db.Column(db.Float)
+    date = db.Column(db.DateTime, nullable=False,
+                     default=datetime.utcnow)
     owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    
 
 
 class Market(db.Model):

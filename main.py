@@ -4,7 +4,6 @@ from passlib.hash import sha256_crypt
 from . import app, db
 from .models import User, Market, Inventory
 from .funcs import *
-import yfinance as yf
 from yahooquery import Ticker
 
 
@@ -20,45 +19,24 @@ def index():
 @login_required
 def inventory():
     inventory = Inventory.query.filter_by(owner_id=current_user.id).all()
-    tickers = Ticker(getSymbols(), asynchronous=True)
-    df = tickers.history(period='1d', interval='1m')
-    latest = df['close'].iloc[-1:]
-    print(df)
+    stocks = []
+    for item in inventory:
+        data = getInventoryData(item.symbol, item.ownedPrice, item.priceWhenBuyed)
+        stocks.append(data)
 
-    return render_template("inventory.html", title='Inventory', inventory=inventory)
+    return render_template("inventory.html", title='Inventory', inventory=stocks)
 
 
 @app.route("/market")
 @login_required
 def market():
-    dicts = []
+    stocks = []
     market_list = Market.query.all()
     for market_data in market_list:
-        data = Ticker(market_data.symbol, asynchronous=True).history(
-            period='1d', interval='1m')
-        # percent = % change
-        change = data['open'][0] - data['close'][1]
-        percent_change = (change/data['open'][1])*100
-        if change >= 0:
-            color = 'text-success'
-        else:
-            color = 'text-danger'
+        data = getStockData(market_data.symbol, market_data.id)
+        stocks.append(data)
 
-        current = {
-            'ID': market_data.id,
-            'Symbol': market_data.symbol,
-            'High': data['high'][0],
-            'Low': data['low'][0],
-            'LastPrice': round(data['open'].iloc[-1], 2),
-            'Open': data['open'][0],
-            'Close': data['close'][0],
-            'Change': round(change, 3),
-            'Percent': round(percent_change, 2),
-            'Color': color
-        }
-        dicts.append(current)
-
-    return render_template("market.html", title='Market', dicts=dicts)
+    return render_template("market.html", title='Market', stocks=stocks)
 
 
 @app.route("/market/add", methods=['POST'])
@@ -69,12 +47,12 @@ def market_add():
         if symbol == '':
             flash('Wrong symbol.', category='danger')
             return redirect(url_for('market'))
-        ticker = yf.Ticker(symbol)
+        ticker = getTicker(symbol)
         new_stock = Market(
             symbol=symbol,
-            openToday=ticker.info['open'],
-            previousClose=ticker.info['regularMarketPreviousClose'],
-            averageVolume=ticker.info['averageVolume'],
+            openToday=ticker['regularMarketOpen'],
+            previousClose=ticker['regularMarketPreviousClose'],
+            averageVolume=ticker['regularMarketVolume'],
             # targetMedianPrice=ticker.info['targetMedianPrice']
         )
 
@@ -91,32 +69,7 @@ def market_add():
 @login_required
 def stock_info(Id):
     stock = Market.query.filter_by(id=Id).first()
-    data = Ticker(stock.symbol, asynchronous=True).history(
-            period='1d', interval='1m')
-    #data = Ticker(stock.symbol)
-    #print(tick.price)
-    
-
-    # percent = percent of change due to last price
-    change = data['close'].iloc[-1] - stock.previousClose
-    percent_change = (change/data['close'].iloc[-1])*100
-    if change >= 0:
-        color = 'text-success'
-    else:
-        color = 'text-danger'
-
-    data = {
-        'ID': stock.id,
-        'Symbol': stock.symbol,
-        'Open': data['open'].iloc[-1],
-        'Close': data['close'].iloc[-1],
-        'High': data['high'][0],
-        'Low': data['low'][0],
-        'LastPrice': round(data['open'].iloc[-1], 2),
-        'Change': round(change, 2),
-        'Percent': round(percent_change, 2),
-        'Color': color
-    }
+    data = getStockData(stock.symbol, stock.id)
 
     return render_template("single.html", title='Info', data=data, id=Id)
 
@@ -125,13 +78,13 @@ def stock_info(Id):
 @login_required
 def stock_buy(Id):
     stock = Market.query.filter_by(id=Id).first()
-    data = Ticker(stock.symbol, asynchronous=True).history(
-            period='1d', interval='1m')
+    data = getStockData(stock.symbol, stock.id)
+
     amount = int(request.form.get('amount'))
     if amount <= 0:
         flash("Amount cannot be 0.", category='danger')
         return redirect(url_for('market'))
-    stockPrice = round(data['open'].iloc[-1], 2)
+    stockPrice = data['LastPrice']
     buyingPrice = amount * stockPrice
     balance = current_user.balance
     if balance < buyingPrice:
@@ -139,7 +92,7 @@ def stock_buy(Id):
         return redirect(url_for('market'))
     else:
         current_user.balance = balance - buyingPrice
-        inv = Inventory(stock=stock.symbol, ownedPrice=buyingPrice, priceWhenBuyed=stockPrice, currentPrice=stockPrice,
+        inv = Inventory(symbol=stock.symbol, ownedPrice=buyingPrice, priceWhenBuyed=stockPrice, currentPrice=stockPrice,
                         owner_id=current_user.id)
         db.session.add(inv)
         db.session.commit()

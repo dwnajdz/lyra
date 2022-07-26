@@ -27,14 +27,14 @@
                   </tr>
                 </thead>
                 <tbody>
-                  {% for item in inventory %}
+                  {% for stock in inventory %}
                   <tr>
-                    <th scope="row">{{ item.stock }}</th>
-                    <td>144.18</td>
-                    <td>{{ item.priceWhenBuyed }}</td>
-                    <td class="text-success">+0.88</td>
+                    <th scope="row">{{ stock['symbol'] }}</th>
+                    <td>{{ stock['lastPrice'] }}</td>
+                    <td>{{ stock['priceWhenBuyed'] }}</td>
+                    <td class="{{ stock['colorForGainLoss'] }}">{{ stock['gainOrLoss'] }}</td>
                     <td class="text-success">+0.61%</td>
-                    <td>{{ item.ownedPrice }}</td>
+                    <td>{{ stock['ownedPrice'] }}</td>
                     <td class="text-center"><a href="#" class="btn btn-outline-primary ">Info</a></td>
                   </tr>
                   {% endfor %}
