@@ -2,6 +2,10 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+import pandas as pd
+
+pd.options.display.max_columns = None
+pd.options.display.max_rows = None
 
 app = Flask(__name__)
 
