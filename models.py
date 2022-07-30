@@ -25,6 +25,7 @@ class Inventory(db.Model):
     symbol = db.Column(db.String(1000), nullable=False)
     # ownedPrice is how much you spended on that stock
     ownedPrice = db.Column(db.Float, nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
     # priceWhenBuyed is price of this as you were buying it
     priceWhenBuyed = db.Column(db.Float, nullable=False)
     # currentPrice is current price of stock
@@ -35,7 +36,6 @@ class Inventory(db.Model):
     date = db.Column(db.DateTime, nullable=False,
                      default=datetime.utcnow)
     owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    
 
 
 class Market(db.Model):

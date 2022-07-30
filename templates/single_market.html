@@ -23,12 +23,6 @@
             BUY
           </button>
         </li>
-        <!-- Button trigger modal -->
-        <li class="list-inline-item">
-          <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#sellModal">
-            SELL
-          </button>
-        </li>
       </ul>
       <h5 class="card-title mb-0">{{ data['Symbol'] }}</h5>
       <p class="text-muted fs-6 fw-light">Last update: 3 04:59PM EDT</p>
@@ -77,28 +71,7 @@
         <form method="POST" action="/market/buy/{{ id }}">
           <div class="mb-3">
             <label for="exampleInputPassword1" class="form-label">Amount</label>
-            <input type="number" class="form-control" id="amount", name="amount">
-          </div>
-          <button type="submit" class="btn btn-primary">Submit</button>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
-<!-- SELL Modal -->
-<div class="modal fade" id="sellModal" tabindex="-1" aria-labelledby="sellModallLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Sell</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form method="POST">
-          <div class="mb-3">
-            <label for="exampleInputPassword1" class="form-label">Amount</label>
-            <input type="number" class="form-control" id="amount" aria-describedby="passhelp">
-            <div id="amountHelp" class="form-text">Currently you have: 12</div>
+            <input type="number" class="form-control" id="amount" , name="amount">
           </div>
           <button type="submit" class="btn btn-primary">Submit</button>
         </form>

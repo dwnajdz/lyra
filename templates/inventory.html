@@ -23,6 +23,7 @@
                     <th scope="col">Gain/Loss</th>
                     <th scope="col">Gain/Loss %</th>
                     <th scope="col">Owned</th>
+                    <th scope="col">Quantity</th>
                     <th scope="col">Action</th>
                   </tr>
                 </thead>
@@ -33,9 +34,10 @@
                     <td>{{ stock['lastPrice'] }}</td>
                     <td>{{ stock['priceWhenBuyed'] }}</td>
                     <td class="{{ stock['colorForGainLoss'] }}">{{ stock['gainOrLoss'] }}</td>
-                    <td class="text-success">+0.61%</td>
+                    <td class="{{ stock['colorForGainLoss'] }}">{{ stock['gainOrLossPercent'] }}</td>
                     <td>{{ stock['ownedPrice'] }}</td>
-                    <td class="text-center"><a href="#" class="btn btn-outline-primary ">Info</a></td>
+                    <td>{{ stock['quantity'] }}</td>
+                    <td class="text-center"><a href="/inventory/{{ stock['ID'] }}" class="btn btn-outline-primary ">Info</a></td>
                   </tr>
                   {% endfor %}
                 </tbody>

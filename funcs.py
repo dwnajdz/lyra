@@ -28,20 +28,22 @@ def getStockData(symbol, id):
 
     return data
 
-def getInventoryData(symbol, ownedPrice, priceWhenBuyed):
+
+def getInventoryData(symbol, ownedPrice, priceWhenBuyed, quantity, id):
     ticker = Ticker(symbol)
     data = ticker.price[symbol]
 
     lastPrice = data['regularMarketPrice']
-    gainOrLoss= round(lastPrice - priceWhenBuyed, 4)
+    gainOrLoss = round(lastPrice - priceWhenBuyed, 4)
+    gainOrLossPercent = (lastPrice - priceWhenBuyed) / lastPrice * 100 
 
     if gainOrLoss >= 0:
         colorForGainLoss = 'text-success'
     else:
         colorForGainLoss = 'text-danger'
 
-
     data = {
+        'ID': id,
         'symbol': symbol,
         'pen': data['regularMarketOpen'],
         'previousClose': data['regularMarketPreviousClose'],
@@ -49,8 +51,10 @@ def getInventoryData(symbol, ownedPrice, priceWhenBuyed):
         'low': data['regularMarketDayLow'],
         'lastPrice': lastPrice,
         'ownedPrice': ownedPrice,
+        'quantity': quantity,
         'priceWhenBuyed': priceWhenBuyed,
         'gainOrLoss': gainOrLoss,
+        'gainOrLossPercent': gainOrLossPercent,
         'colorForGainLoss': colorForGainLoss,
     }
 

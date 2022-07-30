@@ -4,13 +4,11 @@ from passlib.hash import sha256_crypt
 from . import app, db
 from .models import User, Market, Inventory
 from .funcs import *
-from yahooquery import Ticker
 
 
 @app.route("/")
 @login_required
 def index():
-    # data = yf.download(['AAPL', 'TSLA', 'GOOGL', 'META'], period="1m", interval='15m', group_by='ticker')
     balance = round(current_user.balance, 5)
     return render_template("index.html", name=current_user.username, title='Overview', balance=balance)
 
@@ -21,10 +19,21 @@ def inventory():
     inventory = Inventory.query.filter_by(owner_id=current_user.id).all()
     stocks = []
     for item in inventory:
-        data = getInventoryData(item.symbol, item.ownedPrice, item.priceWhenBuyed)
+        data = getInventoryData(
+            item.symbol, item.ownedPrice, item.priceWhenBuyed, item.quantity, item.id)
         stocks.append(data)
 
     return render_template("inventory.html", title='Inventory', inventory=stocks)
+
+
+@app.route("/inventory/<int:Id>")
+@login_required
+def inventoryItem(Id):
+    item = Inventory.query.filter_by(owner_id=current_user.id, id=Id).first()
+    data = getInventoryData(
+            item.symbol, item.ownedPrice, item.priceWhenBuyed, item.quantity, item.id)
+    data['date'] = item.date
+    return render_template("single_inventory.html", title='Owned - ' + item.symbol, data=data)
 
 
 @app.route("/market")
@@ -71,7 +80,7 @@ def stock_info(Id):
     stock = Market.query.filter_by(id=Id).first()
     data = getStockData(stock.symbol, stock.id)
 
-    return render_template("single.html", title='Info', data=data, id=Id)
+    return render_template("single_market.html", title='Info', data=data, id=Id)
 
 
 @app.route('/market/buy/<int:Id>', methods=['POST'])
@@ -92,7 +101,7 @@ def stock_buy(Id):
         return redirect(url_for('market'))
     else:
         current_user.balance = balance - buyingPrice
-        inv = Inventory(symbol=stock.symbol, ownedPrice=buyingPrice, priceWhenBuyed=stockPrice, currentPrice=stockPrice,
+        inv = Inventory(symbol=stock.symbol, ownedPrice=buyingPrice, quantity=amount, priceWhenBuyed=stockPrice, currentPrice=stockPrice,
                         owner_id=current_user.id)
         db.session.add(inv)
         db.session.commit()
