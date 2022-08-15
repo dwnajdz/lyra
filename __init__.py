@@ -2,15 +2,12 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
-import pandas as pd
-
-pd.options.display.max_columns = None
-pd.options.display.max_rows = None
+from flask_socketio import SocketIO
 
 app = Flask(__name__)
-
 app.config['SECRET_KEY'] = 'secretkey'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
+socketio = SocketIO(app)
 
 db = SQLAlchemy(app)
 
@@ -32,4 +29,4 @@ def load_user(user_id):
 db.init_app(app)
 
 if __name__ == '__main__':
-    app.run(threaded=True)
+    socketio.run(app, threaded=True)

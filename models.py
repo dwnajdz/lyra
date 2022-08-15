@@ -30,7 +30,6 @@ class Inventory(db.Model):
     priceWhenBuyed = db.Column(db.Float, nullable=False)
     # currentPrice is current price of stock
     # it is updated every time you enter /inventory
-    currentPrice = db.Column(db.Float)
     gainOrLoss = db.Column(db.Float)
     gainOrLossPercent = db.Column(db.Float)
     date = db.Column(db.DateTime, nullable=False,
@@ -41,14 +40,6 @@ class Inventory(db.Model):
 class Market(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     symbol = db.Column(db.String(100), unique=True)
-    # added this columns below for faster market/<Id> page loading
-    # and not downloading always the same static data
-    #
-    # columns below are always updated at the end of day
-    openToday = db.Column(db.Integer)
-    previousClose = db.Column(db.Integer)
-    averageVolume = db.Column(db.Integer)
-    #targetMedianPrice = db.Column(db.Integer)
 
 
 class Analysis(db.Model):

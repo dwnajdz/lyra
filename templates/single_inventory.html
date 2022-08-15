@@ -18,7 +18,7 @@
     <div class="card-body">
       <ul class="list-inline">
         <li class="list-inline-item">
-          <a href="/market" class="btn btn-outline-primary">BUY</a>
+          <a href="/market/{{ data['symbol'] }}#buyModal" class="btn btn-outline-primary">BUY</a>
         </li>
         <!-- Button trigger modal -->
         <li class="list-inline-item">
@@ -35,12 +35,12 @@
         <li class="list-inline-item fs-3 {{ data['colorForGainLoss'] }}">({{ data['gainOrLossPercent'] }}%)</li>
       </ul>
 
-
       <table class="table">
         <thead>
           <tr>
             <th scope="col">Symbol</th>
             <th scope="col">Current price</th>
+            <th scope="col">Buyed at.</th>
             <th scope="col">Owned price</th>
             <th scope="col">Quantity</th>
             <th scope="col">Gain/Loss</th>
@@ -52,21 +52,21 @@
           <tr>
             <td>{{ data['symbol'] }}</td>
             <td>{{ data['lastPrice'] }}</td>
+            <td>{{ data['priceWhenBuyed'] }}</td>
             <td>{{ data['ownedPrice'] }}</td>
             <td>{{ data['quantity'] }}</td>
-            <td>{{ data['Low'] }}</td>
-            <td>{{ data['Low'] }}</td>
-            <td title="(Hour/Minute/Second Day/Month/Year)">{{ data['date'].strftime('%H:%M:%S %d-%m-%Y')  }}</td>
+            <td class="{{ data['colorForGainLoss'] }}">{{ data['gainOrLoss'] }}</td>
+            <td class="{{ data['colorForGainLoss'] }}">{{ data['gainOrLossPercent'] }}</td>
+            <td title="(Hour/Minute/Second Day/Month/Year)">{{ data['date'].strftime('%H:%M:%S %d-%m-%Y') }}</td>
           </tr>
         </tbody>
       </table>
 
-      <canvas class="my-4 w-100" id="myChart" width="900" height="380"></canvas>
+      <div id='chart' class='chart' ”></div>
     </div>
   </div>
 
 </div>
-</main>
 
 <!-- SELL Modal -->
 <div class="modal fade" id="sellModal" tabindex="-1" aria-labelledby="sellModallLabel" aria-hidden="true">
@@ -77,11 +77,13 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <form method="POST">
+        <form method="POST" action="/sell">
           <div class="mb-3">
             <label for="exampleInputPassword1" class="form-label">Amount</label>
-            <input type="number" class="form-control" id="amount" aria-describedby="passhelp">
-            <div id="amountHelp" class="form-text">Currently you have: 12</div>
+            <input type="number" class="form-control" name="amount" id="amount" aria-describedby="passhelp">
+            <input type="hidden" name="inventory_id" value="{{ data['ID'] }}">
+            <input type="hidden" name="symbol" value="{{ data['symbol'] }}">
+            <div id="amountHelp" class="form-text">Currently you have: {{ data['quantity'] }}</div>
           </div>
           <button type="submit" class="btn btn-primary">Submit</button>
         </form>
@@ -90,65 +92,10 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/feather-icons@4.28.0/dist/feather.min.js"
-  integrity="sha384-uO3SXW5IuS1ZpFPKugNNWqTZRRglnUJK6UAZ/gxOX80nxEkN9NcGZTftn6RzhGWE" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"
-  integrity="sha384-zNy6FEbO50N+Cg5wap8IKA4M/ZnLJgzc6w2NqACZaK0u0FXfOWRRJOnQtpZun8ha" crossorigin="anonymous"></script>
-
-<script>
-  /* globals Chart:false, feather:false */
-
-  (function () {
-    'use strict'
-
-    feather.replace({ 'aria-hidden': 'true' })
-
-    // Graphs
-    var ctx = document.getElementById('myChart')
-    // eslint-disable-next-line no-unused-vars
-    var myChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: [
-          'Sunday',
-          'Monday',
-          'Tuesday',
-          'Wednesday',
-          'Thursday',
-          'Friday',
-          'Saturday'
-        ],
-        datasets: [{
-          data: [
-            15339,
-            21345,
-            18483,
-            24003,
-            23489,
-            24092,
-            12034
-          ],
-          lineTension: 0,
-          backgroundColor: 'transparent',
-          borderColor: '#007bff',
-          borderWidth: 4,
-          pointBackgroundColor: '#007bff'
-        }]
-      },
-      options: {
-        scales: {
-          yAxes: [{
-            ticks: {
-              beginAtZero: false
-            }
-          }]
-        },
-        legend: {
-          display: false
-        }
-      }
-    })
-  })()
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script type="text/javascript">
+  var graphs = {{ graphJSON | safe }};
+  Plotly.plot('chart', graphs, {});        
 </script>
 
 {% endblock %}

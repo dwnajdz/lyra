@@ -31,27 +31,19 @@
                 <th scope="col">Bought</th>
                 <th scope="col">+/-</th>
                 <th scope="col">% Chg.</th>
+                <th scope="col">Quantity</th>
               </tr>
             </thead>
             <tbody>
+              {% for item in inventory_list %}
               <tr>
-                <th scope="row">AAPL</th>
-                <td>144.18</td>
-                <td class="text-success">+0.88</td>
-                <td class="text-success">+0.61%</td>
+                <th scope="row">{{ item.symbol }}</th>
+                <td>{{ item.ownedPrice }}</td>
+                <td>{{ item.gainOrLoss }}</td>
+                <td>{{ item.gainOrLossPercent }} %</td>
+                <td class="text-primary">{{ item.quantity }}</td>
               </tr>
-              <tr>
-                <th scope="row">TSLA</th>
-                <td>844.18</td>
-                <td class="text-danger">-0.88</td>
-                <td class="text-danger">+0.61%</td>
-              </tr>
-              <tr>
-                <th scope="row">GOOGL</th>
-                <td>2345.98</td>
-                <td class="text-success">+68.14</td>
-                <td class="text-success">+2.99%</td>
-              </tr>
+              {% endfor %}
               <tr>
                 <th colspan="5" class="text-center">
                   <div class="d-grid gap-2 col-3 mx-auto">
@@ -103,34 +95,15 @@
               </tr>
             </thead>
             <tbody>
+              {% for stock in market_list %}
               <tr>
-                <th scope="row">AAPL</th>
+                <th scope="row">{{ stock.symbol }}</th>
                 <td>144.18</td>
                 <td>145.06</td>
                 <td class="text-success">+0.88</td>
                 <td class="text-success">+0.61%</td>
               </tr>
-              <tr>
-                <th scope="row">TSLA</th>
-                <td>844.18</td>
-                <td>845.06</td>
-                <td class="text-danger">-0.88</td>
-                <td class="text-danger">+0.61%</td>
-              </tr>
-              <tr>
-                <th scope="row">GOOGL</th>
-                <td>2345.98</td>
-                <td>2258.93</td>
-                <td class="text-success">+68.14</td>
-                <td class="text-success">+2.99%</td>
-              </tr>
-              <tr>
-                <th scope="row">FB</th>
-                <td>144.18</td>
-                <td>145.06</td>
-                <td class="text-success">+0.88</td>
-                <td class="text-success">+0.61%</td>
-              </tr>
+              {% endfor %}
               <tr>
                 <th colspan="5" class="text-center">
                   <div class="d-grid gap-2 col-3 mx-auto">

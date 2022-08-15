@@ -1,7 +1,10 @@
+import plotly
+import plotly.graph_objs as go
+from datetime import datetime
 from yahooquery import Ticker
 
 
-def getStockData(symbol, id):
+def getStockData(symbol):
     ticker = Ticker(symbol)
     data = ticker.price[symbol]
 
@@ -14,16 +17,15 @@ def getStockData(symbol, id):
         color = 'text-danger'
 
     data = {
-        'ID': id,
-        'Symbol': symbol,
-        'Open': data['regularMarketOpen'],
+        'symbol': symbol,
+        'open': data['regularMarketOpen'],
         'previousClose': data['regularMarketPreviousClose'],
-        'High': data['regularMarketDayHigh'],
-        'Low': data['regularMarketDayLow'],
-        'LastPrice': data['regularMarketPrice'],
-        'Change': round(change, 2),
-        'Percent': round(percent_change, 2),
-        'Color': color,
+        'high': data['regularMarketDayHigh'],
+        'low': data['regularMarketDayLow'],
+        'lastPrice': data['regularMarketPrice'],
+        'change': round(change, 2),
+        'percent': round(percent_change, 2),
+        'color': color,
     }
 
     return data
@@ -34,8 +36,8 @@ def getInventoryData(symbol, ownedPrice, priceWhenBuyed, quantity, id):
     data = ticker.price[symbol]
 
     lastPrice = data['regularMarketPrice']
-    gainOrLoss = round(lastPrice - priceWhenBuyed, 4)
-    gainOrLossPercent = (lastPrice - priceWhenBuyed) / lastPrice * 100 
+    gainOrLoss = round(lastPrice - priceWhenBuyed, 4) * quantity
+    gainOrLossPercent = (lastPrice - priceWhenBuyed) / lastPrice * 100
 
     if gainOrLoss >= 0:
         colorForGainLoss = 'text-success'
@@ -66,3 +68,31 @@ def getTicker(symbol):
     data = ticker.price[symbol]
 
     return data
+
+
+def createStockChart(symbol):
+    ticker = Ticker(symbol)
+    df = ticker.history()
+    df = df.reset_index(level=[0, 1])
+
+    fig = go.Figure(
+        data=[go.Candlestick(
+            x=df['date'],
+            open=df['open'],
+            high=df['high'],
+            low=df['low'],
+            close=df['close']
+        )])
+
+    return fig
+
+
+def amountUserCanAfford(balance, price):
+    amount = 0
+    while True:
+        if balance < price:
+            break
+        balance = balance - price
+        amount += 1
+
+    return amount

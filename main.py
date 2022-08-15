@@ -1,16 +1,60 @@
+import json
+import time
+import threading
 from flask import request, render_template, url_for, redirect, flash
 from flask_login import login_required, current_user, login_user, logout_user
 from passlib.hash import sha256_crypt
-from . import app, db
+from . import app, db, socketio
 from .models import User, Market, Inventory
 from .funcs import *
+from yahooquery import Ticker
+from threading import Timer, Thread
 
 
 @app.route("/")
 @login_required
 def index():
     balance = round(current_user.balance, 5)
-    return render_template("index.html", name=current_user.username, title='Overview', balance=balance)
+    inventory_list = Inventory.query.filter_by(
+        owner_id=current_user.id).limit(3).all()
+    market_list = Market.query.limit(3).all()
+
+    return render_template(
+        # html file
+        "index.html",
+        # template
+        name=current_user.username,
+        title='Overview',
+        balance=balance,
+        inventory_list=inventory_list,
+        market_list=market_list
+    )
+
+
+@app.route("/sell", methods=['POST'])
+def sell():
+    amount = request.form.get("amount")
+    inventory_id = request.form.get("inventory_id")
+    symbol = request.form.get("symbol")
+
+    try:
+        item = Inventory.query.filter_by(
+            id=inventory_id, owner_id=current_user.id).first()
+
+        ticker = Ticker(symbol)
+        data = ticker.price[symbol]
+        lastPrice = data['regularMarketPrice']
+        price = lastPrice * float(amount)
+        current_user.balance += price
+
+        db.session.delete(item)
+        db.session.commit()
+
+        flash('Successfly selled your stock!', category='success')
+        return redirect(url_for('inventory'))
+    except:
+        flash('Wrong symbol.', category='danger')
+        return redirect(url_for('inventory'))
 
 
 @app.route("/inventory")
@@ -30,19 +74,24 @@ def inventory():
 @login_required
 def inventoryItem(Id):
     item = Inventory.query.filter_by(owner_id=current_user.id, id=Id).first()
+    # chart
+    fig = createStockChart(item.symbol)
+    graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+
     data = getInventoryData(
-            item.symbol, item.ownedPrice, item.priceWhenBuyed, item.quantity, item.id)
+        item.symbol, item.ownedPrice, item.priceWhenBuyed, item.quantity, item.id)
     data['date'] = item.date
-    return render_template("single_inventory.html", title='Owned - ' + item.symbol, data=data)
+    return render_template("single_inventory.html", title='Owned - ' + item.symbol, graphJSON=graphJSON, data=data)
 
 
 @app.route("/market")
+@socketio.on('update')
 @login_required
 def market():
     stocks = []
     market_list = Market.query.all()
     for market_data in market_list:
-        data = getStockData(market_data.symbol, market_data.id)
+        data = getStockData(market_data.symbol)
         stocks.append(data)
 
     return render_template("market.html", title='Market', stocks=stocks)
@@ -53,17 +102,17 @@ def market():
 def market_add():
     if request.method == 'POST':
         symbol = request.form.get("stock-symbol")
-        if symbol == '':
+        try:
+            ticker = getTicker(symbol)
+            new_stock = Market(
+                symbol=symbol,
+                openToday=ticker['regularMarketOpen'],
+                previousClose=ticker['regularMarketPreviousClose'],
+                averageVolume=ticker['regularMarketVolume'],
+            )
+        except:
             flash('Wrong symbol.', category='danger')
             return redirect(url_for('market'))
-        ticker = getTicker(symbol)
-        new_stock = Market(
-            symbol=symbol,
-            openToday=ticker['regularMarketOpen'],
-            previousClose=ticker['regularMarketPreviousClose'],
-            averageVolume=ticker['regularMarketVolume'],
-            # targetMedianPrice=ticker.info['targetMedianPrice']
-        )
 
         db.session.merge(new_stock)
         db.session.commit()
@@ -74,38 +123,98 @@ def market_add():
         return redirect(url_for('market'))
 
 
-@app.route("/market/<int:Id>")
+class RepeatTimer(object):
+    def __init__(self, interval, function, *args, **kwargs):
+        self._timer = None
+        self.daemon = True
+        self.interval = interval
+        self.function = function
+        self.args = args
+        self.kwargs = kwargs
+        self.is_running = False
+        self.start()
+
+    def _run(self):
+        self.is_running = False
+        self.start()
+        self.function(*self.args, **self.kwargs)
+
+    def start(self):
+        if not self.is_running:
+            self._timer = Timer(self.interval, self._run)
+            self._timer.start()
+            self.is_running = True
+
+    def stop(self):
+        self._timer.cancel()
+        self.is_running = False
+
+
+@app.route("/market/<string:Symbol>")
+@socketio.on('update')
 @login_required
-def stock_info(Id):
-    stock = Market.query.filter_by(id=Id).first()
-    data = getStockData(stock.symbol, stock.id)
+def stock_info(Symbol):
+    fig = createStockChart(Symbol)
+    graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
-    return render_template("single_market.html", title='Info', data=data, id=Id)
+    tmplData = getStockData(Symbol)
+    amount = amountUserCanAfford(
+        current_user.balance, tmplData['lastPrice'])
+
+    '''
+    @socketio.on('connect')
+    def socket_update(data):
+        live_data = getStockData(Symbol)
+        timer = RepeatTimer(5, socket_update, live_data)
+        timer.start()
+        if data != tmplData:
+            socketio.emit('liveData', data=data)
+    '''
+
+    return render_template(
+        "single_market.html",
+        title='Info',
+        graphJSON=graphJSON,
+        data=tmplData,
+        amount=amount
+    )
 
 
-@app.route('/market/buy/<int:Id>', methods=['POST'])
+@app.route('/market/buy/<string:Symbol>', methods=['POST'])
 @login_required
-def stock_buy(Id):
-    stock = Market.query.filter_by(id=Id).first()
-    data = getStockData(stock.symbol, stock.id)
-
+def stock_buy(Symbol):
+    data = getStockData(Symbol)
     amount = int(request.form.get('amount'))
     if amount <= 0:
         flash("Amount cannot be 0.", category='danger')
         return redirect(url_for('market'))
-    stockPrice = data['LastPrice']
-    buyingPrice = amount * stockPrice
+
+    lastPrice = data['lastPrice']
+    buyingPrice = amount * lastPrice
     balance = current_user.balance
     if balance < buyingPrice:
         flash("You don't have enough money for buying this stock.", category='danger')
         return redirect(url_for('market'))
     else:
         current_user.balance = balance - buyingPrice
-        inv = Inventory(symbol=stock.symbol, ownedPrice=buyingPrice, quantity=amount, priceWhenBuyed=stockPrice, currentPrice=stockPrice,
-                        owner_id=current_user.id)
+
+        gainOrLoss = round(lastPrice - buyingPrice, 4) * amount
+        gainOrLossPercent = (lastPrice - buyingPrice) / lastPrice * 100
+
+        inv = Inventory(
+            symbol=Symbol,
+            ownedPrice=buyingPrice,
+            quantity=amount,
+            priceWhenBuyed=lastPrice,
+            gainOrLoss=gainOrLoss,
+            gainOrLossPercent=gainOrLossPercent,
+            owner_id=current_user.id
+        )
+
         db.session.add(inv)
         db.session.commit()
-        flash("You don't have enoug money for buying this stock.", category='success')
+
+        flash("Sucessfly buyed a stock.", category='success')
         return redirect(url_for('market'))
 
 

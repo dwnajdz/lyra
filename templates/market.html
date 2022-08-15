@@ -56,13 +56,14 @@
             <tbody>
               {% for stock in stocks %}
               <tr>
-                <th scope="row">{{stock['Symbol']}}</th>
-                <td>{{stock['LastPrice']}}</td>
-                <td>{{stock['High']}}</td>
-                <td>{{stock['Low']}}</td>
-                <td class="{{stock['Color']}}">{{stock['Change']}}</td>
-                <td class="{{stock['Color']}}">{{stock['Percent']}}%</td>
-                <td class="text-center"><a href="/market/{{ stock['ID'] }}" class="btn btn-outline-primary ">Info</a></td>
+                <th scope="row">{{stock['symbol']}}</th>
+                <td>{{stock['lastPrice']}}</td>
+                <td>{{stock['high']}}</td>
+                <td>{{stock['low']}}</td>
+                <td class="{{stock['color']}}">{{stock['change']}}</td>
+                <td class="{{stock['color']}}">{{stock['percent']}}%</td>
+                <td class="text-center"><a href="/market/{{ stock['symbol'] }}"
+                    class="btn btn-outline-primary ">Info</a></td>
               </tr>
               {% endfor %}
             </tbody>
@@ -73,4 +74,5 @@
   </div>
 
 </div>
+
 {% endblock %}

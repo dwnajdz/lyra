@@ -6,7 +6,7 @@
   <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
       <li class="breadcrumb-item"><a href="index.html">Overview</a></li>
-      <li class="breadcrumb-item"><a href="inventory.html">Inventory</a></li>
+      <li class="breadcrumb-item"><a href="inventory.html">Market</a></li>
       <li class="breadcrumb-item active" aria-current="page">Info</li>
     </ol>
   </nav>
@@ -24,12 +24,12 @@
           </button>
         </li>
       </ul>
-      <h5 class="card-title mb-0">{{ data['Symbol'] }}</h5>
+      <h5 class="card-title mb-0">{{ data['symbol'] }}</h5>
       <p class="text-muted fs-6 fw-light">Last update: 3 04:59PM EDT</p>
       <ul class="list-inline">
-        <li class="list-inline-item fs-1">{{ data['LastPrice'] }}</li>
-        <li class="list-inline-item fs-3 {{ data['Color'] }}">{{ data['Change'] }}</li>
-        <li class="list-inline-item fs-3 {{ data['Color'] }}">({{ data['Percent'] }}%)</li>
+        <li class="list-inline-item fs-1" id="lastPrice">{{ data['lastPrice'] }}</li>
+        <li class="list-inline-item fs-3 {{ data['color'] }}" id="change">{{ data['change'] }}</li>
+        <li class="list-inline-item fs-3 {{ data['color'] }}" id="percent">({{ data['percent'] }}%)</li>
       </ul>
 
 
@@ -44,20 +44,19 @@
         </thead>
         <tbody>
           <tr>
-            <td>{{ data['previousClose'] }}</td>
-            <td>{{ data['Open'] }}</td>
-            <td>{{ data['High'] }}</td>
-            <td>{{ data['Low'] }}</td>
+            <td id="close">{{ data['previousClose'] }}</td>
+            <td id="open">{{ data['open'] }}</td>
+            <td id="high">{{ data['high'] }}</td>
+            <td id="low">{{ data['low'] }}</td>
           </tr>
         </tbody>
       </table>
 
-      <canvas class="my-4 w-100" id="myChart" width="900" height="380"></canvas>
+      <div id='chart' class='chart' ”></div>
     </div>
   </div>
 
 </div>
-</main>
 
 <!-- Buy Modal -->
 <div class="modal fade" id="buyModal" tabindex="-1" aria-labelledby="buyModallLabel" aria-hidden="true">
@@ -68,10 +67,13 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <form method="POST" action="/market/buy/{{ id }}">
+        <form method="POST" action="/market/buy/{{ data['symbol'] }}">
           <div class="mb-3">
             <label for="exampleInputPassword1" class="form-label">Amount</label>
             <input type="number" class="form-control" id="amount" , name="amount">
+            <div class="form-text">
+              Amount of stocks that you can afford: {{ amount }}
+            </div>
           </div>
           <button type="submit" class="btn btn-primary">Submit</button>
         </form>
@@ -80,65 +82,29 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/feather-icons@4.28.0/dist/feather.min.js"
-  integrity="sha384-uO3SXW5IuS1ZpFPKugNNWqTZRRglnUJK6UAZ/gxOX80nxEkN9NcGZTftn6RzhGWE" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"
-  integrity="sha384-zNy6FEbO50N+Cg5wap8IKA4M/ZnLJgzc6w2NqACZaK0u0FXfOWRRJOnQtpZun8ha" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"
+  integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA=="
+  crossorigin="anonymous"></script>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script type="text/javascript" charset="utf-8">
+  var socket = io()
+  var graphs = {{ graphJSON | safe }};
 
-<script>
-  /* globals Chart:false, feather:false */
-
-  (function () {
-    'use strict'
-
-    feather.replace({ 'aria-hidden': 'true' })
-
-    // Graphs
-    var ctx = document.getElementById('myChart')
-    // eslint-disable-next-line no-unused-vars
-    var myChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: [
-          'Sunday',
-          'Monday',
-          'Tuesday',
-          'Wednesday',
-          'Thursday',
-          'Friday',
-          'Saturday'
-        ],
-        datasets: [{
-          data: [
-            15339,
-            21345,
-            18483,
-            24003,
-            23489,
-            24092,
-            12034
-          ],
-          lineTension: 0,
-          backgroundColor: 'transparent',
-          borderColor: '#007bff',
-          borderWidth: 4,
-          pointBackgroundColor: '#007bff'
-        }]
-      },
-      options: {
-        scales: {
-          yAxes: [{
-            ticks: {
-              beginAtZero: false
-            }
-          }]
-        },
-        legend: {
-          display: false
-        }
-      }
-    })
-  })()
+  //socket.on('graphLive', function (graph) {
+    //console.log(graph)
+    //if (typeof graph !== 'undefined') graphs = graph;        
+  //})
+  Plotly.plot('chart', graphs, {});
+ 
+  socket.on('marketLive', function (data) {
+    if (typeof data !== 'undefined') {
+      lastPrice = document.getElementById("lastPrice")
+      lastPrice.innerHTML = data.lastPrice
+      lastPrice.classList.add('text-primary');
+      document.getElementById("change").innerHTML = data.change
+      document.getElementById("percent").innerHTML = `( ${data.percent}%)`
+    }
+  });
 </script>
 
 {% endblock %}
