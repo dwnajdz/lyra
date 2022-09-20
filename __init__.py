@@ -1,13 +1,10 @@
-
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
-from flask_socketio import SocketIO
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secretkey'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
-socketio = SocketIO(app)
 
 db = SQLAlchemy(app)
 
@@ -27,6 +24,3 @@ def load_user(user_id):
 
 
 db.init_app(app)
-
-if __name__ == '__main__':
-    socketio.run(app, threaded=True)

@@ -4,12 +4,22 @@ import threading
 from flask import request, render_template, url_for, redirect, flash
 from flask_login import login_required, current_user, login_user, logout_user
 from passlib.hash import sha256_crypt
-from . import app, db, socketio
-from .models import User, Market, Inventory
+from . import app, db
+from .models import Analysis, User, Market, Inventory
 from .funcs import *
 from yahooquery import Ticker
-from threading import Timer, Thread
 
+
+def real_balance(user):
+    balance = user.balance
+    inventory = Inventory.query.filter_by(owner_id=user.id).all()
+    for item in inventory:
+        ticker = Ticker(item.symbol)
+        data = ticker.price[item.symbol]
+
+        price = data['regularMarketPrice'] * item.quantity
+        balance += price
+    return balance
 
 @app.route("/")
 @login_required
@@ -18,6 +28,12 @@ def index():
     inventory_list = Inventory.query.filter_by(
         owner_id=current_user.id).limit(3).all()
     market_list = Market.query.limit(3).all()
+    user_gain_analysis = 0
+    try:
+        analysis = Analysis.query.all()
+        user_gain_analysis = analysis[-1].balance - real_balance(current_user)
+    except:
+        pass
 
     return render_template(
         # html file
@@ -27,7 +43,9 @@ def index():
         title='Overview',
         balance=balance,
         inventory_list=inventory_list,
-        market_list=market_list
+        market_list=market_list,
+        user_gain_analysis=user_gain_analysis,
+        user_analysis_color=setColor(user_gain_analysis)
     )
 
 
@@ -46,7 +64,9 @@ def sell():
         lastPrice = data['regularMarketPrice']
         price = lastPrice * float(amount)
         current_user.balance += price
+        analysis = Analysis(balance=current_user.balance)
 
+        db.session.add(analysis)
         db.session.delete(item)
         db.session.commit()
 
@@ -85,7 +105,6 @@ def inventoryItem(Id):
 
 
 @app.route("/market")
-@socketio.on('update')
 @login_required
 def market():
     stocks = []
@@ -102,14 +121,13 @@ def market():
 def market_add():
     if request.method == 'POST':
         symbol = request.form.get("stock-symbol")
+        symbol = symbol.upper()
+        db_record = Market.query.filter_by(symbol=symbol).first()
+        if db_record != None:
+            flash('Already exist.', category='info')
+            return redirect(url_for('market'))
         try:
-            ticker = getTicker(symbol)
-            new_stock = Market(
-                symbol=symbol,
-                openToday=ticker['regularMarketOpen'],
-                previousClose=ticker['regularMarketPreviousClose'],
-                averageVolume=ticker['regularMarketVolume'],
-            )
+            new_stock = Market(symbol=symbol)
         except:
             flash('Wrong symbol.', category='danger')
             return redirect(url_for('market'))
@@ -123,35 +141,8 @@ def market_add():
         return redirect(url_for('market'))
 
 
-class RepeatTimer(object):
-    def __init__(self, interval, function, *args, **kwargs):
-        self._timer = None
-        self.daemon = True
-        self.interval = interval
-        self.function = function
-        self.args = args
-        self.kwargs = kwargs
-        self.is_running = False
-        self.start()
-
-    def _run(self):
-        self.is_running = False
-        self.start()
-        self.function(*self.args, **self.kwargs)
-
-    def start(self):
-        if not self.is_running:
-            self._timer = Timer(self.interval, self._run)
-            self._timer.start()
-            self.is_running = True
-
-    def stop(self):
-        self._timer.cancel()
-        self.is_running = False
-
 
 @app.route("/market/<string:Symbol>")
-@socketio.on('update')
 @login_required
 def stock_info(Symbol):
     fig = createStockChart(Symbol)
@@ -160,16 +151,6 @@ def stock_info(Symbol):
     tmplData = getStockData(Symbol)
     amount = amountUserCanAfford(
         current_user.balance, tmplData['lastPrice'])
-
-    '''
-    @socketio.on('connect')
-    def socket_update(data):
-        live_data = getStockData(Symbol)
-        timer = RepeatTimer(5, socket_update, live_data)
-        timer.start()
-        if data != tmplData:
-            socketio.emit('liveData', data=data)
-    '''
 
     return render_template(
         "single_market.html",
@@ -211,7 +192,10 @@ def stock_buy(Symbol):
             owner_id=current_user.id
         )
 
+        analysis = Analysis(balance=current_user.balance)
+
         db.session.add(inv)
+        db.session.add(analysis)
         db.session.commit()
 
         flash("Sucessfly buyed a stock.", category='success')

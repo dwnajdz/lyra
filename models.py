@@ -11,7 +11,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(100), unique=True)
     username = db.Column(db.String(1000))
     password = db.Column(db.String(100))
-    balance = db.Column(db.Float, default=1000.00)
+    balance = db.Column(db.Float, default=212.14)
 
     def __init__(self, email, username, password):
         self.email = email
@@ -23,13 +23,9 @@ class Inventory(db.Model):
     __tablename__ = "inventory"
     id = db.Column(db.Integer, primary_key=True)
     symbol = db.Column(db.String(1000), nullable=False)
-    # ownedPrice is how much you spended on that stock
     ownedPrice = db.Column(db.Float, nullable=False)
     quantity = db.Column(db.Integer, nullable=False)
-    # priceWhenBuyed is price of this as you were buying it
     priceWhenBuyed = db.Column(db.Float, nullable=False)
-    # currentPrice is current price of stock
-    # it is updated every time you enter /inventory
     gainOrLoss = db.Column(db.Float)
     gainOrLossPercent = db.Column(db.Float)
     date = db.Column(db.DateTime, nullable=False,
@@ -45,7 +41,5 @@ class Market(db.Model):
 class Analysis(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     balance = db.Column(db.Float)
-    # price collected at the end of the day
-    price = db.Column(db.Integer)
     date = db.Column(db.DateTime, nullable=False,
                      default=datetime.utcnow)
