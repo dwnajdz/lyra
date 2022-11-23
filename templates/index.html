@@ -5,7 +5,8 @@
 <div class="container">
   <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-      <li class="breadcrumb-item active" aria-current="page">Overview</li>
+      <li class="breadcrumb-item active"
+        aria-current="page">Overview</li>
     </ol>
   </nav>
 
@@ -14,7 +15,8 @@
       <div class="card">
         <h3 class="card-header">Balance of % changes</h3>
         <div class="card-body mb-4">
-          <canvas class="my-4 w-100" id="myChart" width="900" height="380"></canvas>
+          <div id='chart'
+            class='chart'></div>
         </div>
       </div>
 
@@ -29,25 +31,27 @@
               <tr>
                 <th scope="col">#</th>
                 <th scope="col">Bought</th>
-                <th scope="col">+/-</th>
-                <th scope="col">% Chg.</th>
+                <th scope="col">+/- (rounded)</th>
+                <th scope="col">% Chg. (rounded)</th>
                 <th scope="col">Quantity</th>
               </tr>
             </thead>
             <tbody>
-              {% for item in inventory_list %}
+              {% for item in inventory_list[:3] %}
               <tr>
                 <th scope="row">{{ item.symbol }}</th>
                 <td>{{ item.ownedPrice }}</td>
-                <td>{{ item.gainOrLoss }}</td>
-                <td>{{ item.gainOrLossPercent }} %</td>
+                <td>{{ item.gainOrLoss|round }}</td>
+                <td>{{ item.gainOrLossPercent|round }} %</td>
                 <td class="text-primary">{{ item.quantity }}</td>
               </tr>
               {% endfor %}
               <tr>
-                <th colspan="5" class="text-center">
+                <th colspan="5"
+                  class="text-center">
                   <div class="d-grid gap-2 col-3 mx-auto">
-                    <a href="/inventory" class="btn btn-outline-primary btn-sm">...</a>
+                    <a href="/inventory"
+                      class="btn btn-outline-primary btn-sm">...</a>
                   </div>
                 </th>
               </tr>
@@ -55,7 +59,8 @@
           </table>
 
           <p class="card-text">Stocks that are owned by you. You can check more of them in the Inventory page.</p>
-          <a href="/inventory" class="btn btn-primary">Inventory</a>
+          <a href="/inventory"
+            class="btn btn-primary">Inventory</a>
         </div>
       </div>
 
@@ -64,11 +69,16 @@
       <div class="card">
         <h2 class="card-header">Balance [$USD]</h2>
         <div class="card-body">
+          <h2 class="text-center text-secondary">Active balance:</h2>
           <h1 class="text-center">{{ balance }}</h1>
+          <hr>
+          <h2 class="text-center text-secondary">Real balance:</h2>
+          <h1 class="text-center">{{ real_user_balance }}</h1>
           <hr>
 
           <div class="row">
-            <div class="col" style="border-right: 1px solid #333;">
+            <div class="col"
+              style="border-right: 1px solid #333;">
               <h6 class="text-center text-body">Change: </h6>
               <h4 class="text-center {{ user_analysis_color }} bg-dark">{{ user_gain_analysis }}</h4>
             </div>
@@ -101,9 +111,11 @@
               </tr>
               {% endfor %}
               <tr>
-                <th colspan="5" class="text-center">
+                <th colspan="5"
+                  class="text-center">
                   <div class="d-grid gap-2 col-3 mx-auto">
-                    <a href="/market" class="btn btn-outline-primary btn-sm">...</a>
+                    <a href="/market"
+                      class="btn btn-outline-primary btn-sm">...</a>
                   </div>
                 </th>
               </tr>
@@ -112,7 +124,8 @@
 
           <p class="card-text">These are just most popular stocks in the market. You can browse more of them if you
             click button below.</p>
-          <a href="/market" class="btn btn-primary">Market</a>
+          <a href="/market"
+            class="btn btn-primary">Market</a>
         </div>
       </div>
     </div>
@@ -121,63 +134,15 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/feather-icons@4.28.0/dist/feather.min.js"
-  integrity="sha384-uO3SXW5IuS1ZpFPKugNNWqTZRRglnUJK6UAZ/gxOX80nxEkN9NcGZTftn6RzhGWE" crossorigin="anonymous"></script>
+  integrity="sha384-uO3SXW5IuS1ZpFPKugNNWqTZRRglnUJK6UAZ/gxOX80nxEkN9NcGZTftn6RzhGWE"
+  crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"
-  integrity="sha384-zNy6FEbO50N+Cg5wap8IKA4M/ZnLJgzc6w2NqACZaK0u0FXfOWRRJOnQtpZun8ha" crossorigin="anonymous"></script>
+  integrity="sha384-zNy6FEbO50N+Cg5wap8IKA4M/ZnLJgzc6w2NqACZaK0u0FXfOWRRJOnQtpZun8ha"
+  crossorigin="anonymous"></script>
 
-<script>
-  /* globals Chart:false, feather:false */
-
-  (function () {
-    'use strict'
-
-    feather.replace({ 'aria-hidden': 'true' })
-
-    // Graphs
-    var ctx = document.getElementById('myChart')
-    // eslint-disable-next-line no-unused-vars
-    var myChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: [
-          'Sunday',
-          'Monday',
-          'Tuesday',
-          'Wednesday',
-          'Thursday',
-          'Friday',
-          'Saturday'
-        ],
-        datasets: [{
-          data: [
-            15339,
-            21345,
-            18483,
-            24003,
-            23489,
-            24092,
-            12034
-          ],
-          lineTension: 0,
-          backgroundColor: 'transparent',
-          borderColor: '#007bff',
-          borderWidth: 4,
-          pointBackgroundColor: '#007bff'
-        }]
-      },
-      options: {
-        scales: {
-          yAxes: [{
-            ticks: {
-              beginAtZero: false
-            }
-          }]
-        },
-        legend: {
-          display: false
-        }
-      }
-    })
-  })()
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script type="text/javascript">
+  var graphs = {{ graphJSON | safe }};
+  Plotly.plot('chart', graphs, {});        
 </script>
 {% endblock %}

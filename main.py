@@ -1,4 +1,5 @@
 import json
+import plotly.express as px
 from flask import request, render_template, url_for, redirect, flash
 from flask_login import login_required, current_user, login_user, logout_user
 from passlib.hash import sha256_crypt
@@ -8,7 +9,7 @@ from .funcs import *
 from yahooquery import Ticker
 
 
-def real_balance(user):
+def real_balance(user: User):
     balance = user.balance
     inventory = Inventory.query.filter_by(owner_id=user.id).all()
     for item in inventory:
@@ -19,19 +20,37 @@ def real_balance(user):
         balance += price
     return balance
 
+
+def analysis_chart(user):
+    user_analysis = Analysis.query.filter_by(user_id=user.id).all()
+    x_data = []
+    y_data = []
+    for item in user_analysis:
+        x_data.append(item.date)
+        y_data.append(item.balance)
+    df = px.data.stocks()
+    fig = px.line(df, x=x_data, y=y_data)
+    
+    return fig
+
+
 @app.route("/")
 @login_required
 def index():
     balance = round(current_user.balance, 5)
+    real_user_balance = real_balance(current_user)
     inventory_list = Inventory.query.filter_by(
         owner_id=current_user.id).limit(3).all()
     market_list = Market.query.limit(3).all()
     user_gain_analysis = 0
     try:
-        analysis = Analysis.query.all()
+        analysis = Analysis.query.filter_by(user_id=current_user.id).all()
         user_gain_analysis = analysis[-1].balance - real_balance(current_user)
     except:
         pass
+
+    fig = analysis_chart(current_user)
+    graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
     return render_template(
         # html file
@@ -40,10 +59,12 @@ def index():
         name=current_user.username,
         title='Overview',
         balance=balance,
+        real_user_balance=real_user_balance,
         inventory_list=inventory_list,
         market_list=market_list,
         user_gain_analysis=user_gain_analysis,
-        user_analysis_color=setColor(user_gain_analysis)
+        user_analysis_color=setColor(user_gain_analysis),
+        graphJSON=graphJSON
     )
 
 
@@ -62,7 +83,7 @@ def sell():
         lastPrice = data['regularMarketPrice']
         price = lastPrice * float(amount)
         current_user.balance += price
-        analysis = Analysis(balance=current_user.balance)
+        analysis = Analysis(balance=current_user.balance, user_id=current_user.id)
 
         db.session.add(analysis)
         db.session.delete(item)
@@ -109,6 +130,9 @@ def market():
     market_list = Market.query.all()
     for market_data in market_list:
         data = getStockData(market_data.symbol)
+        if data == None:
+            db.session.delete(market_data)
+            db.session.commit()
         stocks.append(data)
 
     return render_template("market.html", title='Market', stocks=stocks)
@@ -190,7 +214,7 @@ def stock_buy(Symbol):
             owner_id=current_user.id
         )
 
-        analysis = Analysis(balance=current_user.balance)
+        analysis = Analysis(balance=current_user.balance, user_id=current_user.id)
 
         db.session.add(inv)
         db.session.add(analysis)
@@ -208,13 +232,20 @@ def settings():
         username = request.form.get('username')
         old_password = request.form.get('old_password')
         new_password = request.form.get('new_password')
+        confirm_password = request.form.get('confirm_password')
+
+        if new_password != confirm_password:
+            flash('Password are not the same', category='danger')
+            return redirect(url_for('settings'))
 
         user = User.query.filter_by(email=email).first()
 
+        print(sha256_crypt.verify(old_password, user.password))
         if sha256_crypt.verify(old_password, user.password):
             user.email = email
             user.username = username
-            user.password = sha256_crypt.encrypt(new_password)
+            if len(new_password) > 0:
+                user.password = sha256_crypt.encrypt(new_password)
             db.session.commit()
             flash('Successfly changed account details', category='success')
             return redirect(url_for('index'))

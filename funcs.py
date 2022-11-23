@@ -15,22 +15,25 @@ def getStockData(symbol):
     ticker = Ticker(symbol)
     data = ticker.price[symbol]
 
-    change = data['regularMarketChange']
-    percent_change = data['regularMarketChangePercent']*100
+    try:
+        change = data['regularMarketChange']
+        percent_change = data['regularMarketChangePercent']*100
 
-    data = {
-        'symbol': symbol,
-        'open': data['regularMarketOpen'],
-        'previousClose': data['regularMarketPreviousClose'],
-        'high': data['regularMarketDayHigh'],
-        'low': data['regularMarketDayLow'],
-        'lastPrice': data['regularMarketPrice'],
-        'change': round(change, 2),
-        'percent': round(percent_change, 2),
-        'color': setColor(change),
-    }
+        data = {
+            'symbol': symbol,
+            'open': data['regularMarketOpen'],
+            'previousClose': data['regularMarketPreviousClose'],
+            'high': data['regularMarketDayHigh'],
+            'low': data['regularMarketDayLow'],
+            'lastPrice': data['regularMarketPrice'],
+            'change': round(change, 2),
+            'percent': round(percent_change, 2),
+            'color': setColor(change),
+        }
 
-    return data
+        return data
+    except:
+        return None
 
 
 def getInventoryData(symbol, ownedPrice, priceWhenBuyed, quantity, id):

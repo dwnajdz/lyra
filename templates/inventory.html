@@ -1,51 +1,53 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <div class="container">
+<div class="container">
 
-      <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="/">Overview</a></li>
-          <li class="breadcrumb-item active" aria-current="page">Inventory</li>
-        </ol>
-      </nav>
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="/">Overview</a></li>
+      <li class="breadcrumb-item active"
+        aria-current="page">Inventory</li>
+    </ol>
+  </nav>
 
-      <div class="row">
-        <div class="col-mt-12">
-          <div class="card mt-2 shadow-sm p-3 mb-5 bg-body rounded">
-            <div class="card-body">
-              <table class="table table-bordered">
-                <thead>
-                  <tr>
-                    <th scope="col">Symbol</th>
-                    <th scope="col">Current price</th>
-                    <th scope="col">Buy price</th>
-                    <th scope="col">Gain/Loss</th>
-                    <th scope="col">Gain/Loss %</th>
-                    <th scope="col">Owned</th>
-                    <th scope="col">Quantity</th>
-                    <th scope="col">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for stock in inventory %}
-                  <tr>
-                    <th scope="row">{{ stock['symbol'] }}</th>
-                    <td>{{ stock['lastPrice'] }}</td>
-                    <td>{{ stock['priceWhenBuyed'] }}</td>
-                    <td class="{{ stock['colorForGainLoss'] }}">{{ stock['gainOrLoss'] }}</td>
-                    <td class="{{ stock['colorForGainLoss'] }}">{{ stock['gainOrLossPercent'] }}</td>
-                    <td>{{ stock['ownedPrice'] }}</td>
-                    <td>{{ stock['quantity'] }}</td>
-                    <td class="text-center"><a href="/inventory/{{ stock['ID'] }}" class="btn btn-outline-primary ">Info</a></td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-          </div>
+  <div class="row">
+    <div class="col-mt-12">
+      <div class="card mt-2 shadow-sm p-3 mb-5 bg-body rounded">
+        <div class="card-body">
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th scope="col">Symbol</th>
+                <th scope="col">Current price</th>
+                <th scope="col">Buy price</th>
+                <th scope="col">Gain/Loss</th>
+                <th scope="col">Gain/Loss %</th>
+                <th scope="col">Owned</th>
+                <th scope="col">Quantity</th>
+                <th scope="col">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for stock in inventory %}
+              <tr>
+                <th scope="row">{{ stock['symbol'] }}</th>
+                <td>{{ stock['lastPrice'] }}</td>
+                <td>{{ stock['priceWhenBuyed'] }}</td>
+                <td class="{{ stock['colorForGainLoss'] }}">{{ stock['gainOrLoss'] }}</td>
+                <td class="{{ stock['colorForGainLoss'] }}">{{ stock['gainOrLossPercent'] }}</td>
+                <td>{{ stock['ownedPrice'] }}</td>
+                <td>{{ stock['quantity'] }}</td>
+                <td class="text-center"><a href="/inventory/{{ stock['ID'] }}"
+                    class="btn btn-outline-primary ">Info</a></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
         </div>
       </div>
-
     </div>
+  </div>
+
+</div>
 {% endblock %}

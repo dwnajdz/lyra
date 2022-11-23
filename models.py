@@ -1,7 +1,5 @@
 from datetime import datetime
-from enum import unique
 from flask_login import UserMixin
-from sqlalchemy import ForeignKey
 from . import db
 
 
@@ -43,3 +41,4 @@ class Analysis(db.Model):
     balance = db.Column(db.Float)
     date = db.Column(db.DateTime, nullable=False,
                      default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
